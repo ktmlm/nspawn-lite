@@ -2,13 +2,13 @@ use myutil::{err::*, *};
 use nix::{
     mount::{self, umount2, MntFlags, MsFlags},
     sched::{clone, unshare, CloneFlags},
-    unistd::{chdir, pivot_root},
+    unistd::{chdir, execv, pivot_root},
 };
-use std::process::Command;
+use std::ffi::CString;
 
 fn main() {
     // TODO clap args
-    pnk!(run("/data/baseimage", "/lib/systemd/systemd"));
+    pnk!(run("/data/baseimage", "/sbin/init"));
 }
 
 fn run(root_path: &str, cmd_path: &str) -> Result<i32> {
@@ -27,6 +27,8 @@ fn run(root_path: &str, cmd_path: &str) -> Result<i32> {
     let mut flags = CloneFlags::empty();
     flags.insert(CloneFlags::CLONE_NEWNS);
     flags.insert(CloneFlags::CLONE_NEWPID);
+    flags.insert(CloneFlags::CLONE_NEWUTS);
+    flags.insert(CloneFlags::CLONE_NEWIPC);
 
     let pid = clone(
         Box::new(ops),
@@ -54,13 +56,15 @@ fn mount_make_rprivate() -> Result<()> {
 }
 
 fn start_systemd(cmd_path: &str) -> Result<()> {
-    Command::new(cmd_path).output().c(d!()).and_then(|o| {
-        if o.status.success() {
-            Ok(())
-        } else {
-            Err(eg!(String::from_utf8_lossy(&o.stderr)))
-        }
-    })
+    execv(
+        &CString::new(cmd_path).unwrap(),
+        &[
+            &CString::new("systemd").unwrap(),
+            &CString::new("--system").unwrap(),
+        ],
+    )
+    .map(|_| ())
+    .c(d!())
 }
 
 fn do_pivot_root(root_path: &str) -> Result<()> {
