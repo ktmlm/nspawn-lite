@@ -92,7 +92,7 @@ fn start_systemd(cmd_path: &str) -> Result<()> {
     execv(
         &CString::new(cmd_path).unwrap(),
         &[
-            &CString::new("systemd").unwrap(),
+            &CString::new("systemd-AnXinSec").unwrap(),
             &CString::new("--system").unwrap(),
         ],
     )
