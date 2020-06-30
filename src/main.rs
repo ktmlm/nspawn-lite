@@ -54,10 +54,13 @@ fn mount_make_rprivate() -> Result<()> {
 }
 
 fn start_systemd(cmd_path: &str) -> Result<()> {
-    Command::new(cmd_path)
-        .status()
-        .c(d!())
-        .and_then(|s| if s.success() { Ok(()) } else { Err(eg!()) })
+    Command::new(cmd_path).output().c(d!()).and_then(|o| {
+        if o.status.success() {
+            Ok(())
+        } else {
+            Err(eg!(String::from_utf8_lossy(&o.stderr)))
+        }
+    })
 }
 
 fn do_pivot_root(root_path: &str) -> Result<()> {
