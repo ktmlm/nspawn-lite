@@ -20,5 +20,6 @@ FLAGS:
 
 OPTIONS:
     -c, --cmd-path <PATH>     The command path **after** chroot.
+    -n, --exec-name <NAME>    The name of 'inner systemd' process, gotten by `ps` command.
     -r, --root-path <PATH>    The new rootfs path **before** chroot.
 ```
