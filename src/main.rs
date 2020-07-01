@@ -39,7 +39,7 @@ fn main() {
 
 // Return the PID of the-inner-systemd
 fn run(root_path: &str, cmd_path: &str) -> Result<i32> {
-    // 临时栈空间，执行`execv`后就会被丢弃
+    // 临时栈空间, 执行`execv`后就会被丢弃
     const STACK_SIZ: usize = 1024 * 1024;
 
     let mut stack = Vec::with_capacity(STACK_SIZ);

@@ -1,5 +1,11 @@
 # nspawn-lite
 
+A minimal systemd-nspawn implement.
+
+- 用于适配 CentOS 6.x 等内核版本 >=2.6.34, 但使用 sysv init 系统的平台
+- 用于适配 CentOS 8.x 及 Ubuntu 16.04/18.04/20.04 等不预装 `systemd-nspawn` 的平台
+  - 此类平台, 将 systemd-nspawn 功能拆分为单独的安装包 `systemd-container`
+
 ```shell
 nspawn-lite 0.1
 FanHui. <hui.fan@mail.ru>
