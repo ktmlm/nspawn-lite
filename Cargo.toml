@@ -1,6 +1,6 @@
 [package]
 name = "nspawn-lite"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["范辉 <fanhui.x@gmail.com>"]
 edition = "2018"
 

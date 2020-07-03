@@ -7,7 +7,7 @@ A minimal `systemd-nspawn` implement.
   - 此类平台, 发行方将 `systemd-nspawn` 功能拆分为独立的安装包 `systemd-container`
 
 ```shell
-nspawn-lite 0.1
+nspawn-lite 0.2
 FanHui. <hui.fan@mail.ru>
 A mininal container engine.
 
@@ -19,7 +19,8 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -c, --cmd-path <PATH>     The command path **after** chroot.
-    -n, --exec-name <NAME>    The name of 'inner systemd' process, gotten by `ps` command.
-    -r, --root-path <PATH>    The new rootfs path **before** chroot.
+    -a, --cmd-args <ARGS>...    Args given to the `cmd`.
+    -c, --cmd-path <PATH>       The command path **after** chroot.
+    -n, --exec-name <NAME>      The name of 'inner systemd' process, gotten by `ps` command.
+    -r, --root-path <PATH>      The new rootfs path **before** chroot.
 ```

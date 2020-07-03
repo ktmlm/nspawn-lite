@@ -16,7 +16,6 @@ macro_rules! err {
 
 fn main() {
     let matches = App::new("nspawn-lite")
-        .version("0.1")
         .author("FanHui. <hui.fan@mail.ru>")
         .about("A mininal container engine.")
         .args_from_usage(
