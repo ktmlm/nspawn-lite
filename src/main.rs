@@ -20,23 +20,27 @@ fn main() {
         .author("FanHui. <hui.fan@mail.ru>")
         .about("A mininal container engine.")
         .args_from_usage(
-            "-r --root-path=[PATH] 'The new rootfs path **before** chroot.'",
-        )
-        .args_from_usage(
-            "-c --cmd-path=[PATH] 'The command path **after** chroot.'",
-        )
-        .args_from_usage(
-            "-n --exec-name=[NAME] 'The name of 'inner systemd' process, gotten by `ps` command.'",
-        )
+            "
+            -r --root-path=[PATH] 'The new rootfs path **before** chroot.'
+            -c --cmd-path=[PATH] 'The command path **after** chroot.'
+            -a --cmd-args=[ARGS]... 'Args given to the `cmd`.'
+            -n --exec-name=[NAME] 'The name of 'inner systemd' process, gotten by `ps` command.'
+            ")
         .get_matches();
 
     match (
         matches.value_of("root-path"),
         matches.value_of("cmd-path"),
+        matches.values_of("cmd-args"),
         matches.value_of("exec-name"),
     ) {
-        (Some(rp), Some(cp), exec_name) => {
-            pnk!(run(rp, cp, exec_name.unwrap_or("systemd-embed")));
+        (Some(root), Some(cmd), args, exec_name) => {
+            pnk!(run(
+                root,
+                cmd,
+                args.map(|a| a.collect()).unwrap_or(Vec::new()).as_slice(),
+                exec_name.unwrap_or(cmd)
+            ));
         }
         _ => {
             err!();
@@ -45,7 +49,12 @@ fn main() {
 }
 
 // Return the PID of the-inner-systemd
-fn run(root_path: &str, cmd_path: &str, exec_name: &str) -> Result<i32> {
+fn run(
+    root_path: &str,
+    cmd_path: &str,
+    cmd_args: &[&str],
+    exec_name: &str,
+) -> Result<i32> {
     // 临时栈空间, 执行`execv`后就会被丢弃
     const STACK_SIZ: usize = 1024 * 1024;
 
@@ -66,7 +75,7 @@ fn run(root_path: &str, cmd_path: &str, exec_name: &str) -> Result<i32> {
             .c(d!())
             .and_then(|_| do_pivot_root(root_path).c(d!()))
             .and_then(|_| mount_dynfs_proc().c(d!()))
-            .and_then(|_| start_systemd(cmd_path, exec_name)));
+            .and_then(|_| start_cmd(cmd_path, cmd_args, exec_name)));
         0
     };
 
@@ -95,13 +104,22 @@ fn mount_make_rprivate() -> Result<()> {
 }
 
 // As the PID-1 process
-fn start_systemd(cmd_path: &str, exec_name: &str) -> Result<()> {
+fn start_cmd(
+    cmd_path: &str,
+    cmd_args: &[&str],
+    exec_name: &str,
+) -> Result<()> {
+    let mut args = vec![CString::new(exec_name).unwrap()];
+    cmd_args
+        .iter()
+        .for_each(|arg| args.push(CString::new(*arg).unwrap()));
+
     execv(
         &CString::new(cmd_path).unwrap(),
-        &[
-            &CString::new(exec_name).unwrap(),
-            &CString::new("--system").unwrap(),
-        ],
+        args.iter()
+            .map(|a| a.as_c_str())
+            .collect::<Vec<_>>()
+            .as_slice(),
     )
     .map(|_| ())
     .c(d!())
